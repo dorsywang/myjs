@@ -41,52 +41,67 @@ var $ = function(base){
     //获得基础匹配结果
     getBaseElement: function(b){
 
+      //如果存在eq
       if(this.parsePattern.eqParse.test(b)){
         var parseResult = b.match(this.parsePattern.eqParse);
+
+        //获得n
         this.eqNumber = parseResult[1];
-        b= b.replace(this.parsePattern.eqParse,"");
+
+        //去掉eq表达式
+        b = b.replace(this.parsePattern.eqParse, "");
       }
 
       //分离空格选择器
-      b= b.replace(/ +/g," ");
-      b= b.split(" ");
+      b = b.replace(/ +/g," ").split(" ");
+
       var resultArr = [];
 
-      var lastElement = b[b.length - 1];//最后一个标记
-      var lastElementArr = this.getElement(lastElement);//得到最后一个元素数组
+      //得到最后一个标记匹配标记
+      var lastElement = b[b.length - 1];
+
+      //得到最后一个元素数组
+      var lastElementArr = this.getElement(lastElement);
+
       var flag = 0;
 
-      var that = this;
-      function checkParent(currentElement,currentNumber){//递归检测父元素,curr...当前元素，curr...对应要检测标记的下标
+      var _this = this;
+
+      //递归检测父元素,curr...当前元素，curr...对应要检测标记的下标
+      function checkParent(currentElement, currentNumber){
+
         if(currentNumber == 0){
           flag = 1;
           return;
         }
+
         var parentNode = currentElement.parentNode;
 
-        if(!parentNode) return;
-
-        if(!parentNode.tagName) return;
+        //parent已为空了
+        if(!parentNode || !parentNode.tagName) return;
 
         var parentMark = b[currentNumber - 1];
 
-        if(that.parsePattern.idParse.test(parentMark)){//若此标记是id标记
+        if(_this.parsePattern.idParse.test(parentMark)){//若此标记是id标记
 
-          if(parentNode.id == parentMark.replace("#","")) checkParent(parentNode,-- currentNumber);
+          //如果当前父节点的id匹配则用当前父节点和下一个下标继续检测
+          if(parentNode.id == parentMark.replace("#", "")) checkParent(parentNode, -- currentNumber);
+
+          //否则检测父节点和当前下标
           else{
-              checkParent(parentNode,currentNumber);
+              checkParent(parentNode, currentNumber);
           }
 
-        }else if(that.parsePattern.tagParse.test(parentMark)){
+        }else if(_this.parsePattern.tagParse.test(parentMark)){
 
           if(parentNode.tagName.toLowerCase() == parentMark.toLowerCase()) checkParent(parentNode, -- currentNumber);
           else{
-            checkParent(parentNode,currentNumber);
+            checkParent(parentNode, currentNumber);
           }
 
-        }else if(that.parsePattern.classParse.test(parentMark)){
+        }else if(_this.parsePattern.classParse.test(parentMark)){
 
-          if(parentNode.className == parentMark.replace(".","")) checkParent(parentNode, -- currentNumber);
+          if(parentNode.className == parentMark.replace(".", "")) checkParent(parentNode, -- currentNumber);
           else{
             checkParent(parentNode,currentNumber);
           }
@@ -111,17 +126,28 @@ var $ = function(base){
     //获得基础元素，id tag class
     getElement: function(b){
         var tag = null;
+
+        //如果是div#t这种形式
         if(this.parsePattern.mutiIdParse.test(b)){
+
           tag = this.parsePattern.mutiIdParse.exec(b)[1];
-          b = b.replace(this.parsePattern.mutiIdParse,"#");
+          b = b.replace(this.parsePattern.mutiIdParse, "#");
+
+        //如果是div.t这种形式
         }else if(this.parsePattern.mutiClassParse.test(b)){
+
           tag = this.parsePattern.mutiClassParse.exec(b)[1];
-          b = b.replace(this.parsePattern.mutiClassParse,".");
+          b = b.replace(this.parsePattern.mutiClassParse, ".");
+
         }
 
         //返回获取元素，类型为数组    
+
+        //如果是id匹配
         if(this.parsePattern.idParse.test(b)){
-          var Ele = document.getElementById(b.replace("#",""))
+          var Ele = document.getElementById(b.replace("#", ""))
+
+          //如果是存在div#t
           if(tag){
             if(Ele.tagName.toLowerCase() == tag.toLowerCase()) return [Ele];
           }else return [Ele];
@@ -134,20 +160,22 @@ var $ = function(base){
 
           var tempArr = document.getElementsByTagName("*");
           var resultArr = [];
-          var classPattern = new RegExp("( )*" + b.replace(".",""));//构造动态的正则检测，检测如多类名情形："a b"
+          var classPattern = new RegExp("( )*" + b.replace(".", ""));//构造动态的正则检测，检测如多类名情形："a b"
 
+          //遍历检测类匹配
           for(var i in tempArr){
 
             if(tempArr[i].nodeType == 1){
 
               if(classPattern.test(tempArr[i].className)){
 
+                //检测tagName是不是一致
                 if(tag){
                   if(tempArr[i].tagName.toLowerCase() == tag.toLowerCase()) resultArr.push(tempArr[i]);
                 }else resultArr.push(tempArr[i]);
+
               }
             } 
-
           }
 
           return resultArr;
