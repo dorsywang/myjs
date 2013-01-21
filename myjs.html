@@ -13,7 +13,7 @@
 <script type="text/javascript" src="js/myjs.js"></script>
 	<script type="text/javascript">
 $(document).ready(function(){
-    $(".cc").remove();
+    $(".cc").animate({width:"100px",left: "400px"},800);
 });
   </script>
   支持文档列表
@@ -30,7 +30,7 @@ attr
 remove
 ajax
 <div id="ab">
-<div class="cc">OK</div>
+<div class="cc" style="background:red;left:0;position:absolute;">OK</div>
 </div>
 </body>
 </html>

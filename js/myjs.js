@@ -281,6 +281,69 @@ var $ = function(base){
             this.onkeydown = func;
         });
 
+    },
+    animate: function(endCss, time, callBack){
+
+      this.each(function(){
+        ani(this, endCss, time, callBack);
+      });
+
+      function ani(el, endCss, time, callBack){
+         var FPS = 60;
+         var everyStep = {}, currStyle = {};
+
+         for(var i in endCss){
+           try{
+               var currValue = parseFloat(el.currentStyle[i]);
+           }catch(e){
+               var computedStyle = getComputedStyle(el);
+               var currValue = parseFloat(computedStyle.getPropertyValue(i));
+           }
+           currStyle[i] = currValue;
+
+           everyStep[i] = parseInt(parseInt(endCss[i]) - currValue) / time;
+         }
+
+         //当前frame
+         var frame = 0, timer;
+
+         function step(){
+           frame ++;
+
+           //当前时间 ms
+           var t = frame / FPS * 1000;
+
+           //对时间做缓动变换
+
+           //标准化当前时间
+           var t0 = t / time;
+
+           //变换函数
+           var f = function(x, p0, p1, p2, p3){
+
+             //二次贝塞尔曲线
+             //return Math.pow((1 - x), 2) * p0 + (2 * x) * (1 - x) * p1 + x * x * p2; 
+
+             //基于三次贝塞尔曲线 
+             return p0 * Math.pow((1 - x), 3) + 3 * p1 * x * Math.pow((1 - x), 2) + 3 * p2 * x * x * (1 - x) + p3 * Math.pow(x, 3);
+           }
+
+           //对时间进行三次贝塞尔变换 输出时间
+           var t1 = f(t0, 0, 0.42, 1.0, 1.0) * time;
+
+           for(var i in everyStep){
+             el.style[i] = (currStyle[i] + everyStep[i] * t1) + "px";
+           }
+
+           if(frame == time / 1000 * FPS){
+             clearInterval(timer);
+             callBack && callBack();
+           }
+         }
+
+         timer = setInterval(step, 1000 / FPS);
+
+      }
     }
 
   };
