@@ -282,7 +282,20 @@ var $ = function(base){
         });
 
     },
+
+    css: function(property, el){
+        var el = el || this.baseElement[0];
+        try{
+            var computedStyle = getComputedStyle(el);
+            return computedStyle.getPropertyValue(property);
+        }catch(e){
+            return el.currentStyle[property];
+        }
+    },
+
     animate: function(endCss, time, callBack){
+
+      var _this = this;
 
       this.each(function(){
         ani(this, endCss, time, callBack);
@@ -293,12 +306,7 @@ var $ = function(base){
          var everyStep = {}, currStyle = {};
 
          for(var i in endCss){
-           try{
-               var currValue = parseFloat(el.currentStyle[i]);
-           }catch(e){
-               var computedStyle = getComputedStyle(el);
-               var currValue = parseFloat(computedStyle.getPropertyValue(i));
-           }
+           var currValue = parseInt(_this.css(i, el));
            currStyle[i] = currValue;
 
            everyStep[i] = parseInt(parseInt(endCss[i]) - currValue) / time;
@@ -332,7 +340,24 @@ var $ = function(base){
            var t1 = f(t0, 0, 0.42, 1.0, 1.0) * time;
 
            for(var i in everyStep){
-             el.style[i] = (currStyle[i] + everyStep[i] * t1) + "px";
+             if(i == "opacity"){
+                if(window.addEventListener){
+                     el.style[i] = (currStyle[i] + everyStep[i] * t1);
+
+                //ie < 9
+                }else{
+                    el.style.filter = "alpha(opacity=" + (currStyle[i] + everyStep[i] * t1) * 100 + ")";
+                    function setChild(el){
+                        var children = el.childNodes; 
+                        for(var j = 0, n = children.length; j < n; j ++){
+                            children[j] && children[j].nodeType == 1 && (children[j].style.filter = "alpha(opacity=" + (currStyle[i] + everyStep[i] * t1) * 100 + ")") && setChild(children[j]);
+                        }
+                    }
+
+                    setChild(el);
+                }
+             }
+             else el.style[i] = (currStyle[i] + everyStep[i] * t1) + "px";
            }
 
            if(frame == time / 1000 * FPS){
@@ -342,7 +367,6 @@ var $ = function(base){
          }
 
          timer = setInterval(step, 1000 / FPS);
-
       }
     }
 
